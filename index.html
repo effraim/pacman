@@ -225,7 +225,10 @@
         eatDot: function (pacman, dot) {
 
             dot.kill();
-
+		
+            var dot = new Audio('sound/coin.mp3');
+            dot.play();
+		
             if (this.dots.total === 0)
             {
                 this.dots.callAll('revive');
