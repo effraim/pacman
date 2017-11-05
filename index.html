@@ -24,7 +24,8 @@
 	    
     var lives = 3;
     var livestxt = '';
-	    
+    var time = 0;
+	   
     var Pacman = function (game) {
 
         this.map = null;
@@ -45,6 +46,9 @@
 
         this.current = Phaser.NONE;
         this.turning = Phaser.NONE;
+	 
+	this.time = 0; 
+        this.textTime = null;
 
     };
 
@@ -92,6 +96,9 @@
             //  The dots will need to be offset by 6px to put them back in the middle of the grid
             this.dots.setAll('x', 6, false, false, 1);
             this.dots.setAll('y', 6, false, false, 1);
+		
+            this.textTime = game.add.text(195, 220, "Time: "+Math.floor(this.game.time.totalElapsedSeconds()),
+	    { font: '15px Tahoma',  fill: "red" });	
 
             //  Pacman should collide with everything except the safe tile
             this.map.setCollisionByExclusion([this.safetile], true, this.layer);
@@ -246,6 +253,8 @@
           
             this.physics.arcade.collide(this.pacman, this.layer);
             this.physics.arcade.overlap(this.pacman, this.dots, this.eatDot, null, this);
+		
+	    this.textTime.text = "Time: "+Math.floor(this.game.time.totalElapsedSeconds());
 
             this.marker.x = this.math.snapToFloor(Math.floor(this.pacman.x), this.gridsize) / this.gridsize;
             this.marker.y = this.math.snapToFloor(Math.floor(this.pacman.y), this.gridsize) / this.gridsize;
