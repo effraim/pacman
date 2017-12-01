@@ -19,7 +19,7 @@ DOCTYPE HTML>
 	  <source src="sound/Cuphead OST - Flural Fury.mp3" type="audio/mp3">
       </audio>
     <script type="text/javascript">
-    var game = new Phaser.Game(500, 550, Phaser.AUTO);
+    var game = new Phaser.Game(448, 496, Phaser.AUTO);
 	    
     var lives = 3;
     var livestxt = '';
@@ -89,8 +89,8 @@ DOCTYPE HTML>
             this.pacman.play('munch');
             this.move(Phaser.LEFT);
 		
-            livestxt = game.add.text(0, 500, 'Lives: ' + lives, {font:'22px Tahoma', fill: 'red'});
-            scoretxt = game.add.text(-200, 500, 'score: 0', {font: '22px Tahoma', fill: 'red'})
+            livestxt = game.add.text(370, 0, 'Lives: ' + lives, {font:'22px Tahoma', fill: 'red'});
+            scoretxt = game.add.text(0, -5, 'score: 0', {font: '22px Tahoma', fill: 'red'})
 
             let points= this.dots.children.length;
             rn = Math.floor(Math.random() * points);
