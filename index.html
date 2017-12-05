@@ -26,11 +26,14 @@ DOCTYPE HTML>
     var time = 0;
     var score=0;
     var scoretxt;    
-	   
+	
+    var enemySpeed = 100;
+       
     var Pacman = function (game) {
         this.map = null;
         this.layer = null;
         this.pacman = null;
+        this.enemy = null;
         this.safetile = 14;
         this.gridsize = 16;
         this.speed = 150;
@@ -58,6 +61,7 @@ DOCTYPE HTML>
             //  Remove the next 2 lines if running locally
             this.load.baseURL = 'https://effraim.github.io/pacman/';
             this.load.crossOrigin = 'anonymous';
+            this.load.spritesheet('enemy', 'assets/enemy', 32, 32);
             this.load.image('dot', 'assets/coin dot.png');
             this.load.image('bonus', 'assets/bonus.png');
             this.load.image('tiles', 'assets/pacman-tiles.png');
@@ -85,17 +89,41 @@ DOCTYPE HTML>
             this.pacman.animations.add('munch', [0, 1, 2, 1], 20, true);
             this.physics.arcade.enable(this.pacman);
             this.pacman.body.setSize(16, 16, 0, 0);
+            
+            this.enemy = this.add.sprite((3 * 16) + 8, (5 * 16) + 8, 'enemy', 0);
+            this.enemy.anchor.set(0.5);
+            this.physics.arcade.enable(this.enemy);
+            this.enemy.body.setSize(16, 16, 0, 0);
+            
             this.cursors = this.input.keyboard.createCursorKeys();
             this.pacman.play('munch');
             this.move(Phaser.LEFT);
 		
             livestxt = game.add.text(370, 0, 'Lives: ' + lives, {font:'22px Tahoma', fill: 'red'});
             scoretxt = game.add.text(0, -5, 'score: 0', {font: '22px Tahoma', fill: 'red'})
-
             let points= this.dots.children.length;
             rn = Math.floor(Math.random() * points);
             this.dots.children[rn].loadTexture('bonus');    
         },
+        
+        
+        chaseMe: function(){
+            var enemySpeed = 100;
+            if (this.pacman.body.x < this.enemy.body.x) {
+                this.enemy.body.velocity.x = enemySpeed * -1;
+            }
+            else{
+                this.enemy.body.velocity.x = enemySpeed;
+            }
+            if (this.pacman.body.y <this.enemy.body.y){
+                this.enemy.body.velocity.y = enemySpeed * -1;
+            }
+            else{
+                this.enemy.body.velocity.y = enemySpeed;
+            }
+        },    
+        
+        
         checkKeys: function () {
             if (this.cursors.left.isDown && this.current !== Phaser.LEFT)
             {
@@ -213,10 +241,80 @@ DOCTYPE HTML>
                 this.dots.callAll('revive');
             }
         },
+        
+        getCaught: function (ghost, pacman){
+		if ( lives == 1 ) {
+			this.GameOver = game.add.text(45, 170, 'GAME OVER! :(', {font: '60px Tahoma', fill: 'purple'});
+			this.GameOver2 = game.add.text(45, 255, 'Refresh to play', { font: '50px Tahoma', fill: "purple"});
+			this.GameOver3 = game.add.text(150, 340, 'again!', { font: '50px Tahoma', fill: "purple"});
+			lives = 0;
+			livestxt.text = ' ' + lives;
+	   		audio.play();
+			pacman.kill();
+		}
+		else{
+		//  Position Pacman at starting position
+
+        
+		this.pacman.destroy();
+		this.pacman = this.add.sprite((14 * 16) + 8, (17 * 16) + 8, 'pacman', 0);
+		this.pacman.anchor.set(0.5);
+		this.pacman.animations.add('munch', [0, 1, 2, 1], 20, true);
+		this.physics.arcade.enable(this.pacman);
+		this.pacman.body.setSize(16, 16, 0, 0);
+		this.pacman.play('munch');
+			
+		//  Position enemy at starting position
+		this.enemy.destroy();
+		this.enemy = this.add.sprite((14 * 16) + 8, (11 * 16) + 8, 'enemy', 0);
+		this.enemy.anchor.set(0.5);
+		this.enemy.animations.add('munch', [0, 1, 2, 1], 20, true);
+		this.physics.arcade.enable(this.enemy);
+		this.enemy.body.setSize(16, 16, 0, 0);
+		this.enemy.play('munch');
+			
+		
+		lives--;
+		livestxt.text = ' ' + lives;
+		}
+        },
+        
         update: function () {
-          
+            
+            this.enemy.scale.x = 1;
+	        if(this.enemy.angle == 0)
+             {
+        		this.enemy.body.velocity.x = enemySpeed;
+        	}
+        	if(this.enemy.angle == -180)
+        	{
+        		this.enemy.body.velocity.x = -enemySpeed;
+        	}
+        	if(this.enemy.angle == 90)
+        	{
+        		this.enemy.body.velocity.y = enemySpeed;
+        	}
+        	if(this.enemy.angle == -90)
+        	{
+        		this.enemy.body.velocity.y = -enemySpeed;
+        	}       	
+        	if(this.physics.arcade.collide(this.enemy, this.layer))
+        	{
+        		randomVar = Math.floor((Math.random() * 2) + 1);
+        		if(randomVar == 1)
+        		{
+        			this.enemy.angle = this.enemy.angle + 90;
+        		}
+        		else
+        		{
+        			this.enemy.angle = this.enemy.angle - 90;
+        		}        		
+            } 
+           
             this.physics.arcade.collide(this.pacman, this.layer);
             this.physics.arcade.overlap(this.pacman, this.dots, this.eatDot, null, this);
+            this.physics.arcade.collide(this.enemy, this.layer);
+            this.physics.arcade.overlap(this.enemy, this.pacman, this.getCaught, null,this);
 		
 	    this.textTime.text = "Time: "+Math.floor(this.game.time.totalElapsedSeconds());
             this.marker.x = this.math.snapToFloor(Math.floor(this.pacman.x), this.gridsize) / this.gridsize;
