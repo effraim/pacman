@@ -104,7 +104,7 @@ DOCTYPE HTML>
             this.pacman.play('munch');
             this.move(Phaser.LEFT);
 		
-            livestxt = game.add.text(370, 0, 'Lives: ' + lives, {font:'22px Tahoma', fill: 'red'});
+            livestxt = game.add.text(370, 0, 'Lives:' + lives, {font:'22px Tahoma', fill: 'red'});
             scoretxt = game.add.text(0, -5, 'score: 0', {font: '22px Tahoma', fill: 'red'})
             let points= this.dots.children.length;
             rn = Math.floor(Math.random() * points);
@@ -249,11 +249,11 @@ DOCTYPE HTML>
         
         getCaught: function (enemy, pacman){
 		if ( lives == 1 ) {
-			this.GameOver = game.add.text(45, 170, 'GAME OVER! :(', {font: '60px Tahoma', fill: 'purple'});
-			this.GameOver2 = game.add.text(45, 255, 'Refresh to play', { font: '50px Tahoma', fill: "purple"});
-			this.GameOver3 = game.add.text(150, 340, 'again!', { font: '50px Tahoma', fill: "purple"});
+			this.GameOver = game.add.text(45, 170, 'GAME OVER! :(', {font: '60px Tahoma', fill: 'red'});
+			this.GameOver2 = game.add.text(45, 255, 'Refresh to play', { font: '50px Tahoma', fill: "red"});
+			this.GameOver3 = game.add.text(150, 340, 'again!', { font: '50px Tahoma', fill: "red"});
 			lives = 0;
-			livestxt.text = ' ' + lives;
+			livestxt.text = 'Lives:' + lives;
 	   		audio.play();
 			pacman.kill();
 		}
@@ -280,7 +280,7 @@ DOCTYPE HTML>
 			
 		
 		lives--;
-		livestxt.text = ' ' + lives;
+		livestxt.text = 'Lives:' + lives;
 		}
         },
         
