@@ -15,10 +15,15 @@ DOCTYPE HTML>
 </head>
 <body>
    
-      <audio autoplay loop controls>
+      <audio autoplay loop id="myaudio">
 	  <source src="sound/Cuphead OST - Flural Fury.mp3" type="audio/mp3">
       </audio>
+	
     <script type="text/javascript">
+	    
+    var audio = document.getElementById("myaudio");
+    audio.volume = 0.2;
+	    
     var game = new Phaser.Game(448, 496, Phaser.AUTO);
 	    
     var lives = 3;
