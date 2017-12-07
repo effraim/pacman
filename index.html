@@ -359,7 +359,7 @@ DOCTYPE HTML>
            
             this.physics.arcade.collide(this.pacman, this.layer);
             this.physics.arcade.overlap(this.pacman, this.dots, this.eatDot, null, this);
-            this.physics.arcade.overlap(this.alien, this.bullets, this.hitEnemy,null,this);//
+            this.physics.arcade.overlap(this.enemy, this.bullets, this.hitEnemy,null,this);//
             this.physics.arcade.collide(this.enemy, this.layer);
             this.physics.arcade.overlap(this.enemy, this.pacman, this.getCaught, null,this);
 		
