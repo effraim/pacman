@@ -327,9 +327,13 @@ DOCTYPE HTML>
 		
 		
              //  Check if player is about to teleport
-	     if(this.marker.x < 1 || this.marker.x > 27){
+	     if(this.marker.x < 0 || this.marker.x > 27){
 		   this.pacman.x = game.width - this.pacman.x;
 	     }
+		
+	     if(this.marker.x >27 || this.marker.x < 0 ){
+		   this.pacman.x = game.width - this.pacman.x;
+	     }	
 		
             //  Update our grid sensors
             this.directions[1] = this.map.getTileLeft(this.layer.index, this.marker.x, this.marker.y);
