@@ -250,7 +250,7 @@ DOCTYPE HTML>
         getCaught: function (enemy, pacman){
 		if ( lives == 1 ) {
 			this.GameOver = game.add.text(45, 170, 'GAME OVER! :(', {font: '60px Tahoma', fill: 'red'});
-			this.GameOver2 = game.add.text(45, 255, 'Refresh to play', { font: '50px Tahoma', fill: "red"});
+			this.GameOver2 = game.add.text(45, 255, 'Press f5 to play', { font: '50px Tahoma', fill: "red"});
 			this.GameOver3 = game.add.text(150, 340, 'again!', { font: '50px Tahoma', fill: "red"});
 			lives = 0;
 			livestxt.text = 'Lives:' + lives;
