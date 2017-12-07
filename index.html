@@ -324,6 +324,13 @@ DOCTYPE HTML>
 	    this.textTime.text = "Time: "+Math.floor(this.game.time.totalElapsedSeconds());
             this.marker.x = this.math.snapToFloor(Math.floor(this.pacman.x), this.gridsize) / this.gridsize;
             this.marker.y = this.math.snapToFloor(Math.floor(this.pacman.y), this.gridsize) / this.gridsize;
+		
+		
+             //  Check if player is about to teleport
+	     if(this.marker.x < 1 || this.marker.x > 27){
+		   this.pacman.x = game.width - this.pacman.x;
+	     }
+		
             //  Update our grid sensors
             this.directions[1] = this.map.getTileLeft(this.layer.index, this.marker.x, this.marker.y);
             this.directions[2] = this.map.getTileRight(this.layer.index, this.marker.x, this.marker.y);
