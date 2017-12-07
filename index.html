@@ -30,7 +30,9 @@ DOCTYPE HTML>
     var livestxt = '';
     var time = 0;
     var score=0;
-    var scoretxt;    
+    var scoretxt; 
+    var bullets;
+    var bulletTime=0;
 	
     var enemySpeed = 100;
        
@@ -69,6 +71,7 @@ DOCTYPE HTML>
             this.load.spritesheet('enemy', 'assets/40x40.png', 40, 40);
             this.load.image('dot', 'assets/coin dot.png');
             this.load.image('bonus', 'assets/bonus.png');
+            this.load.image('bullet', 'assets/bullet.png');
             this.load.image('tiles', 'assets/pacman-tiles.png');
             this.load.spritesheet('pacman', 'assets/cupman.png', 32, 32);
             this.load.tilemap('map', 'assets/my-pacman-map3.json', null, Phaser.Tilemap.TILED_JSON);
@@ -103,6 +106,16 @@ DOCTYPE HTML>
             this.cursors = this.input.keyboard.createCursorKeys();
             this.pacman.play('munch');
             this.move(Phaser.LEFT);
+		
+	    //	Group of bullets
+            this.bullets = game.add.group();
+            this.bullets.enableBody = true;
+            this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+            this.bullets.createMultiple(30, 'bullet');
+            this.bullets.setAll('anchor.x', 0.5);
+            this.bullets.setAll('anchor.y', 1);
+            this.bullets.setAll('outOfBoundsKill', true);
+            this.bullets.setAll('checkWorldBounds', true);
 		
             livestxt = game.add.text(370, 0, 'Lives:' + lives, {font:'22px Tahoma', fill: 'red'});
             scoretxt = game.add.text(0, -5, 'score: 0', {font: '22px Tahoma', fill: 'red'})
@@ -284,6 +297,34 @@ DOCTYPE HTML>
 		}
         },
         
+	 fireBullet: function ()// Function for my Bullets
+         {
+   		//  To avoid them being allowed to fire too fast we set a time limit
+         if (game.time.now > bulletTime)
+    	 {
+        	//  Grab the first bullet we can from the pool
+       		bullet = this.bullets.getFirstExists(false);
+         if (bullet)
+         {
+            //  And fire it
+            bullet.reset(this.pacman.x, this.pacman.y + 20);
+            bullet.body.velocity.y = -100;
+            bulletTime = game.time.now + 200;
+         }
+         }  
+    },
+	    
+	    
+    hitEnemy: function(enemy,bullet)// When i hit the enemy with the bullets.Both kill 
+    {
+        enemy.kill();              //  And reset the enemy to his start position
+        bullet.kill();
+        score +=100;
+        scoretxt.text= 'Score:' + score;
+    	enemy.reset((16 * 5) + 8, (19 * 16) + 8);
+    },
+	    
+	    
         update: function () {
             
             this.enemy.scale.x = 1;
@@ -318,10 +359,13 @@ DOCTYPE HTML>
            
             this.physics.arcade.collide(this.pacman, this.layer);
             this.physics.arcade.overlap(this.pacman, this.dots, this.eatDot, null, this);
+            this.physics.arcade.overlap(this.alien, this.bullets, this.hitEnemy,null,this);//
             this.physics.arcade.collide(this.enemy, this.layer);
             this.physics.arcade.overlap(this.enemy, this.pacman, this.getCaught, null,this);
 		
 	    this.textTime.text = "Time: "+Math.floor(this.game.time.totalElapsedSeconds());
+		
+	    
             this.marker.x = this.math.snapToFloor(Math.floor(this.pacman.x), this.gridsize) / this.gridsize;
             this.marker.y = this.math.snapToFloor(Math.floor(this.pacman.y), this.gridsize) / this.gridsize;
 		
@@ -342,6 +386,11 @@ DOCTYPE HTML>
             {
                 this.turn();
             }
+		
+	     if (this.fireButton.isDown)// if button pressed fire bullets
+              {   
+              this.fireBullet(); 
+              }
         }
     };
     game.state.add('Game', Pacman, true);
