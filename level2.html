@@ -274,10 +274,13 @@ DOCTYPE HTML>
  
             scoretxt.text = 'Score:\n' +score;
 		
-            if (this.dots.total === 0)
-            {
-                this.dots.callAll('revive');
-            }
+           if (this.coins.total === 1){
+		    
+                this.victory = game.add.text(45, 170, 'The Game is Over :'(', {font: '60px Tahoma', fill: 'red'});
+		this.victory = game.add.text(45, 170, 'But YOU won :')', {font: '60px Tahoma', fill: 'red'});
+                
+            
+           }
         },
         
         getCaught: function (enemy, pacman){
