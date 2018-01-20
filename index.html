@@ -321,14 +321,14 @@ DOCTYPE HTML>
         	}       	
             
             
-            if(this.dicerolled){
-			   
-		   	   if(this.physics.arcade.collide(this.pacman, this.enemy)){
-			      score += 100
-                  this.enemy.kill();
+                if(this.dicerolled){	   
+			if(this.physics.arcade.collide(this.pacman, this.enemy)){
+				score += 100
+                         	this.enemy.kill();
                    
 		       }
-		    }
+	        }
+		scoretxt.text = 'Score:\n' +score;	
         	if(this.physics.arcade.collide(this.enemy, this.layer))
         	{
         		randomVar = Math.floor((Math.random() * 2) + 1);
@@ -345,7 +345,7 @@ DOCTYPE HTML>
             if (this.pacman.overlap(this.dice)) {
 		      this.dice.kill();
 		      this.dicerolled = true ;
-              this.speed=200;
+                      this.speed=200;
 		    }
             
            
