@@ -31,7 +31,7 @@ DOCTYPE HTML>
     var time = 0;
     var score=0;
     var scoretxt; 
-    
+    var dicerolled = false;
 	
     var enemySpeed = 100;
        
@@ -72,6 +72,7 @@ DOCTYPE HTML>
             this.load.image('bonus', 'assets/bonus.png');
             this.load.image('tiles', 'assets/pacman-tiles.png');
             this.load.spritesheet('pacman', 'assets/cupman.png', 32, 32);
+            this.load.spritesheet('dice', 'assets/dice.png',16,16);
             this.load.tilemap('map', 'assets/my-pacman-map3.json', null, Phaser.Tilemap.TILED_JSON);
             //  Needless to say, graphics (C)opyright Namco
         },
@@ -85,7 +86,7 @@ DOCTYPE HTML>
             this.dots.setAll('x', 6, false, false, 1);
             this.dots.setAll('y', 6, false, false, 1);
 		
-            this.textTime = game.add.text(195, 220, "Time: "+Math.floor(this.game.time.totalElapsedSeconds()),
+            this.textTime = game.add.text(5, 270, "Time: "+Math.floor(this.game.time.totalElapsedSeconds()),
 	    { font: '15px Tahoma',  fill: "red" });	
             //  Pacman should collide with everything except the safe tile
             this.map.setCollisionByExclusion([this.safetile], true, this.layer);
@@ -104,10 +105,19 @@ DOCTYPE HTML>
             this.cursors = this.input.keyboard.createCursorKeys();
             this.pacman.play('munch');
             this.move(Phaser.LEFT);
+            
+            //dice 
+	        this.dice = this.add.sprite((13 * 16) + 8, (14 * 16) + 8, 'dice', 0);
+            this.dice.anchor.set(0.0);
+            this.dice.animations.add('munch', [0, 1, 2, 1], 20, true);
+            this.dice.play('munch');
+            this.physics.arcade.enable(this.dice);
+            this.dice.body.setSize(16, 16, 0, 0);            
+
 		
 		
             livestxt = game.add.text(370, 0, 'Lives:' + lives, {font:'22px Tahoma', fill: 'red'});
-            scoretxt = game.add.text(0, -5, 'score: 0', {font: '22px Tahoma', fill: 'red'})
+            scoretxt = game.add.text(0, -5, 'score: \n 0', {font: '22px Tahoma', fill: 'red'})
             let points= this.dots.children.length;
             rn = Math.floor(Math.random() * points);
             this.dots.children[rn].loadTexture('bonus');    
@@ -223,7 +233,7 @@ DOCTYPE HTML>
         eatDot: function (pacman, dot) {
             const bonus = this.dots.getChildIndex(dot) == rn;
             if(bonus){
-                score += 10;
+                score += 50;
                 dot.kill();	
                 var dot = new Audio('sound/coin.mp3');
                 dot.volume = 0.1;
@@ -236,12 +246,12 @@ DOCTYPE HTML>
                 dot.kill();
                  var dot = new Audio('sound/coin.mp3');
 	   dot.volume = 0.1;
-                 score += 1;
+                 score += 10;
              }
                
             dot.play();
  
-            scoretxt.text = 'Score: ' +score;
+            scoretxt.text = 'Score:\n' +score;
 		
             if (this.dots.total === 0)
             {
@@ -261,7 +271,6 @@ DOCTYPE HTML>
 		}
 		else{
 		//  Position Pacman at starting position
-
         
 		this.pacman.destroy();
 		this.pacman = this.add.sprite((14 * 16) + 8, (17 * 16) + 8, 'pacman', 0);
@@ -310,6 +319,16 @@ DOCTYPE HTML>
         	{
         		this.enemy.body.velocity.y = -enemySpeed;
         	}       	
+            
+            
+            if(this.dicerolled){
+			   
+		   	   if(this.physics.arcade.collide(this.pacman, this.enemy)){
+			      score += 100
+                  this.enemy.kill();
+                   
+		       }
+		    }
         	if(this.physics.arcade.collide(this.enemy, this.layer))
         	{
         		randomVar = Math.floor((Math.random() * 2) + 1);
@@ -322,6 +341,13 @@ DOCTYPE HTML>
         			this.enemy.angle = this.enemy.angle - 90;
         		}        		
             } 
+            
+            if (this.pacman.overlap(this.dice)) {
+		      this.dice.kill();
+		      this.dicerolled = true ;
+              this.speed=200;
+		    }
+            
            
             this.physics.arcade.collide(this.pacman, this.layer);
             this.physics.arcade.overlap(this.pacman, this.dots, this.eatDot, null, this);
@@ -339,7 +365,6 @@ DOCTYPE HTML>
 	     if(this.marker.x < 0 || this.marker.x > 27){
 		   this.pacman.x = game.width - this.pacman.x;
 	     }
-
 		
             //  Update our grid sensors
             this.directions[1] = this.map.getTileLeft(this.layer.index, this.marker.x, this.marker.y);
