@@ -1,1 +1,388 @@
-
+DOCTYPE HTML>
+<html>
+<head>
+    <title>Pacman</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+        }
+        
+    </style>
+    <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
+</head>
+<body>
+   
+      <audio autoplay loop id="myaudio">
+	  <source src="sound/Cuphead OST - Flural Fury.mp3" type="audio/mp3">
+      </audio>
+	
+    <script type="text/javascript">
+	    
+    var audio = document.getElementById("myaudio");
+    audio.volume = 0.2;
+	    
+    var game = new Phaser.Game(448, 496, Phaser.AUTO);
+	    
+    var lives = 3;
+    var livestxt = '';
+    var time = 0;
+    var score=0;
+    var scoretxt; 
+    var dicerolled = false;
+	
+    var enemySpeed = 100;
+       
+    var Pacman = function (game) {
+        this.map = null;
+        this.layer = null;
+        this.pacman = null;
+        this.enemy = null;
+        this.safetile = 14;
+        this.gridsize = 16;
+        this.speed = 150;
+        this.threshold = 3;
+        this.marker = new Phaser.Point();
+        this.turnPoint = new Phaser.Point();
+        this.directions = [ null, null, null, null, null ];
+        this.opposites = [ Phaser.NONE, Phaser.RIGHT, Phaser.LEFT, Phaser.DOWN, Phaser.UP ];
+        this.current = Phaser.NONE;
+        this.turning = Phaser.NONE;
+	 
+	this.time = 0; 
+        this.textTime = null;
+    };
+    Pacman.prototype = {
+        init: function () {
+            this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+            this.scale.pageAlignHorizontally = true;
+            this.scale.pageAlignVertically = true;
+            Phaser.Canvas.setImageRenderingCrisp(this.game.canvas);
+            this.physics.startSystem(Phaser.Physics.ARCADE);
+        },
+        preload: function () {
+            //  We need this because the assets are on github pages
+            //  Remove the next 2 lines if running locally
+            this.load.baseURL = 'https://effraim.github.io/pacman/';
+            this.load.crossOrigin = 'anonymous';
+            this.load.spritesheet('enemy', 'assets/40x40.png', 40, 40);
+            this.load.image('dot', 'assets/coin dot.png');
+            this.load.image('bonus', 'assets/bonus.png');
+            this.load.image('tiles', 'assets/pacman-tiles.png');
+            this.load.spritesheet('pacman', 'assets/cupman.png', 32, 32);
+            this.load.spritesheet('dice', 'assets/dice.png',16,16);
+            this.load.tilemap('map', 'assets/my-pacman-map3.json', null, Phaser.Tilemap.TILED_JSON);
+            //  Needless to say, graphics (C)opyright Namco
+        },
+        create: function () {
+            this.map = this.add.tilemap('map');
+            this.map.addTilesetImage('pacman-tiles', 'tiles');
+            this.layer = this.map.createLayer('Pacman');
+            this.dots = this.add.physicsGroup();
+            this.map.createFromTiles(7, this.safetile, 'dot', this.layer, this.dots);
+            //  The dots will need to be offset by 6px to put them back in the middle of the grid
+            this.dots.setAll('x', 6, false, false, 1);
+            this.dots.setAll('y', 6, false, false, 1);
+		
+            this.textTime = game.add.text(5, 270, "Time: "+Math.floor(this.game.time.totalElapsedSeconds()),
+	    { font: '15px Tahoma',  fill: "red" });	
+            //  Pacman should collide with everything except the safe tile
+            this.map.setCollisionByExclusion([this.safetile], true, this.layer);
+            //  Position Pacman at grid location 14x17 (the +8 accounts for his anchor)
+            this.pacman = this.add.sprite((14 * 16) + 8, (17 * 16) + 8, 'pacman', 0);
+            this.pacman.anchor.set(0.5);
+            this.pacman.animations.add('munch', [0, 1, 2, 1], 20, true);
+            this.physics.arcade.enable(this.pacman);
+            this.pacman.body.setSize(16, 16, 0, 0);
+            
+            this.enemy = this.add.sprite((3 * 16) + 8, (5 * 16) + 8, 'enemy', 0);
+            this.enemy.anchor.set(0.5);
+            this.physics.arcade.enable(this.enemy);
+            this.enemy.body.setSize(16, 16, 0, 0);
+            
+            this.cursors = this.input.keyboard.createCursorKeys();
+            this.pacman.play('munch');
+            this.move(Phaser.LEFT);
+            
+            //dice 
+	        this.dice = this.add.sprite((13 * 16) + 8, (14 * 16) + 8, 'dice', 0);
+            this.dice.anchor.set(0.0);
+            this.dice.animations.add('munch', [0, 1, 2, 1], 20, true);
+            this.dice.play('munch');
+            this.physics.arcade.enable(this.dice);
+            this.dice.body.setSize(16, 16, 0, 0);            
+		
+		
+            livestxt = game.add.text(370, 0, 'Lives:' + lives, {font:'22px Tahoma', fill: 'red'});
+            scoretxt = game.add.text(0, -5, 'score: \n 0', {font: '22px Tahoma', fill: 'red'})
+            let points= this.dots.children.length;
+            rn = Math.floor(Math.random() * points);
+            this.dots.children[rn].loadTexture('bonus');    
+        },
+        
+        
+        chaseMe: function(){
+            var enemySpeed = 100;
+            if (this.pacman.body.x < this.enemy.body.x) {
+                this.enemy.body.velocity.x = enemySpeed * -1;
+            }
+            else{
+                this.enemy.body.velocity.x = enemySpeed;
+            }
+            if (this.pacman.body.y <this.enemy.body.y){
+                this.enemy.body.velocity.y = enemySpeed * -1;
+            }
+            else{
+                this.enemy.body.velocity.y = enemySpeed;
+            }
+        },    
+        
+        
+        checkKeys: function () {
+            if (this.cursors.left.isDown && this.current !== Phaser.LEFT)
+            {
+                this.checkDirection(Phaser.LEFT);
+            }
+            else if (this.cursors.right.isDown && this.current !== Phaser.RIGHT)
+            {
+                this.checkDirection(Phaser.RIGHT);
+            }
+            else if (this.cursors.up.isDown && this.current !== Phaser.UP)
+            {
+                this.checkDirection(Phaser.UP);
+            }
+            else if (this.cursors.down.isDown && this.current !== Phaser.DOWN)
+            {
+                this.checkDirection(Phaser.DOWN);
+            }
+            else
+            {
+                //  This forces them to hold the key down to turn the corner
+                this.turning = Phaser.NONE;
+            }
+        },
+        checkDirection: function (turnTo) {
+            if (this.turning === turnTo || this.directions[turnTo] === null || this.directions[turnTo].index !== this.safetile)
+            {
+                //  Invalid direction if they're already set to turn that way
+                //  Or there is no tile there, or the tile isn't index 1 (a floor tile)
+                return;
+            }
+            //  Check if they want to turn around and can
+            if (this.current === this.opposites[turnTo])
+            {
+                this.move(turnTo);
+            }
+            else
+            {
+                this.turning = turnTo;
+                this.turnPoint.x = (this.marker.x * this.gridsize) + (this.gridsize / 2);
+                this.turnPoint.y = (this.marker.y * this.gridsize) + (this.gridsize / 2);
+            }
+        },
+        turn: function () {
+            var cx = Math.floor(this.pacman.x);
+            var cy = Math.floor(this.pacman.y);
+            //  This needs a threshold, because at high speeds you can't turn because the coordinates skip past
+            if (!this.math.fuzzyEqual(cx, this.turnPoint.x, this.threshold) || !this.math.fuzzyEqual(cy, this.turnPoint.y, this.threshold))
+            {
+                return false;
+            }
+            //  Grid align before turning
+            this.pacman.x = this.turnPoint.x;
+            this.pacman.y = this.turnPoint.y;
+            this.pacman.body.reset(this.turnPoint.x, this.turnPoint.y);
+            this.move(this.turning);
+            this.turning = Phaser.NONE;
+            return true;
+        },
+        move: function (direction) {
+            var speed = this.speed;
+            if (direction === Phaser.LEFT || direction === Phaser.UP)
+            {
+                speed = -speed;
+            }
+            if (direction === Phaser.LEFT || direction === Phaser.RIGHT)
+            {
+                this.pacman.body.velocity.x = speed;
+            }
+            else
+            {
+                this.pacman.body.velocity.y = speed;
+            }
+            //  Reset the scale and angle (Pacman is facing to the right in the sprite sheet)
+            this.pacman.scale.x = 1;
+            this.pacman.angle = 0;
+            if (direction === Phaser.LEFT)
+            {
+                this.pacman.scale.x = -1;
+            }
+            else if (direction === Phaser.UP)
+            {
+                this.pacman.angle = 270;
+            }
+            else if (direction === Phaser.DOWN)
+            {
+                this.pacman.angle = 90;
+            }
+            this.current = direction;
+        },
+        eatDot: function (pacman, dot) {
+            const bonus = this.dots.getChildIndex(dot) == rn;
+            if(bonus){
+                score += 50;
+                dot.kill();	
+                var dot = new Audio('sound/coin.mp3');
+                dot.volume = 0.1;
+                let points = this.dots.children.length;
+                rn = Math.floor(Math.random() * points);
+                this.dots.children[rn].revive();
+                this.dots.children[rn].loadTexture('bonus');
+             }
+             else{
+                dot.kill();
+                 var dot = new Audio('sound/coin.mp3');
+	   dot.volume = 0.1;
+                 score += 10;
+             }
+               
+            dot.play();
+ 
+            scoretxt.text = 'Score:\n' +score;
+		
+            if (this.dots.total === 0)
+            {
+                this.dots.callAll('revive');
+            }
+        },
+        
+        getCaught: function (enemy, pacman){
+		if ( lives == 1 ) {
+			this.GameOver = game.add.text(45, 170, 'GAME OVER! :(', {font: '60px Tahoma', fill: 'red'});
+			this.GameOver2 = game.add.text(45, 255, 'Press f5 to play', { font: '50px Tahoma', fill: "red"});
+			this.GameOver3 = game.add.text(150, 340, 'again!', { font: '50px Tahoma', fill: "red"});
+			lives = 0;
+			livestxt.text = 'Lives:' + lives;
+	   		audio.play();
+			pacman.kill();
+		}
+		else{
+		//  Position Pacman at starting position
+        
+		this.pacman.destroy();
+		this.pacman = this.add.sprite((14 * 16) + 8, (17 * 16) + 8, 'pacman', 0);
+		this.pacman.anchor.set(0.5);
+		this.pacman.animations.add('munch', [0, 1, 2, 1], 20, true);
+		this.physics.arcade.enable(this.pacman);
+		this.pacman.body.setSize(16, 16, 0, 0);
+		this.pacman.play('munch');
+			
+		//  Position enemy at starting position
+		this.enemy.destroy();
+		this.enemy = this.add.sprite((14 * 16) + 8, (11 * 16) + 8, 'enemy', 0);
+		this.enemy.anchor.set(0.5);
+		this.enemy.animations.add('munch', [0, 1, 2, 1], 20, true);
+		this.physics.arcade.enable(this.enemy);
+		this.enemy.body.setSize(16, 16, 0, 0);
+		this.enemy.play('munch');
+			
+		
+		lives--;
+		livestxt.text = 'Lives:' + lives;
+		}
+        },
+        
+	    
+	    
+ 
+	    
+	    
+        update: function () {
+            
+            this.enemy.scale.x = 1;
+	        if(this.enemy.angle == 0)
+             {
+        		this.enemy.body.velocity.x = enemySpeed;
+        	}
+        	if(this.enemy.angle == -180)
+        	{
+        		this.enemy.body.velocity.x = -enemySpeed;
+        	}
+        	if(this.enemy.angle == 90)
+        	{
+        		this.enemy.body.velocity.y = enemySpeed;
+        	}
+        	if(this.enemy.angle == -90)
+        	{
+        		this.enemy.body.velocity.y = -enemySpeed;
+        	}       	
+            
+            
+                if(this.dicerolled){	   
+			if(this.physics.arcade.collide(this.pacman, this.enemy)){
+				score += 100
+                         	this.enemy.kill();
+                   
+		       }
+	        }
+		scoretxt.text = 'Score:\n' +score;	
+        	if(this.physics.arcade.collide(this.enemy, this.layer))
+        	{
+        		randomVar = Math.floor((Math.random() * 2) + 1);
+        		if(randomVar == 1)
+        		{
+        			this.enemy.angle = this.enemy.angle + 90;
+        		}
+        		else
+        		{
+        			this.enemy.angle = this.enemy.angle - 90;
+        		}        		
+            } 
+            
+            if (this.pacman.overlap(this.dice)) {
+		      this.dice.kill();
+		      this.dicerolled = true ;
+                      this.speed=200;
+		    }
+            
+           
+            this.physics.arcade.collide(this.pacman, this.layer);
+            this.physics.arcade.overlap(this.pacman, this.dots, this.eatDot, null, this);
+            this.physics.arcade.collide(this.enemy, this.layer);
+            this.physics.arcade.overlap(this.enemy, this.pacman, this.getCaught, null,this);
+		
+	    this.textTime.text = "Time: "+Math.floor(this.game.time.totalElapsedSeconds());
+		
+	    
+            this.marker.x = this.math.snapToFloor(Math.floor(this.pacman.x), this.gridsize) / this.gridsize;
+            this.marker.y = this.math.snapToFloor(Math.floor(this.pacman.y), this.gridsize) / this.gridsize;
+		
+		
+             //  Check if player is about to teleport
+	     if(this.marker.x < 0 || this.marker.x > 27){
+		   this.pacman.x = game.width - this.pacman.x;
+	     }
+		
+            //  Update our grid sensors
+            this.directions[1] = this.map.getTileLeft(this.layer.index, this.marker.x, this.marker.y);
+            this.directions[2] = this.map.getTileRight(this.layer.index, this.marker.x, this.marker.y);
+            this.directions[3] = this.map.getTileAbove(this.layer.index, this.marker.x, this.marker.y);
+            this.directions[4] = this.map.getTileBelow(this.layer.index, this.marker.x, this.marker.y);
+            this.checkKeys();
+            if (this.turning !== Phaser.NONE)
+            {
+                this.turn();
+            }
+		
+	    
+        }
+    };
+    game.state.add('Game', Pacman, true);
+    </script>
+  
+   
+    
+</body>
+</html>
