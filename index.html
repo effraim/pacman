@@ -253,11 +253,24 @@ DOCTYPE HTML>
  
             scoretxt.text = 'Score:\n' +score;
 		
-            if (this.dots.total === 0)
-            {
-                this.dots.callAll('revive');
+            if (this.dots.total === 1){
+		    
+		        this.speed = 0;
+                this.enemySpeed = 0;
+                this.enemy2Speed = 0;
+                this.time = 0;  
+		        audio.pause();
+                this.Victory = game.add.text(45, 170, 'VICTORY :)', {font: '60px Tahoma', fill: 'red'});
+		        this.nextlvl
+              
             }
         },
+        
+        
+      nextlvl: function()
+      {
+            location.href = "https://effraim.github.io/pacman/level2.html";
+      },   
         
         getCaught: function (enemy, pacman){
 		if ( lives == 1 ) {
@@ -321,14 +334,14 @@ DOCTYPE HTML>
         	}       	
             
             
-                if(this.dicerolled){	   
-			if(this.physics.arcade.collide(this.pacman, this.enemy)){
-				score += 100
-                         	this.enemy.kill();
+            if(this.dicerolled){
+			   
+		   	   if(this.physics.arcade.collide(this.pacman, this.enemy)){
+			      score += 100
+                  this.enemy.kill();
                    
 		       }
-	        }
-		scoretxt.text = 'Score:\n' +score;	
+		    }
         	if(this.physics.arcade.collide(this.enemy, this.layer))
         	{
         		randomVar = Math.floor((Math.random() * 2) + 1);
@@ -345,7 +358,7 @@ DOCTYPE HTML>
             if (this.pacman.overlap(this.dice)) {
 		      this.dice.kill();
 		      this.dicerolled = true ;
-                      this.speed=200;
+              this.speed=200;
 		    }
             
            
